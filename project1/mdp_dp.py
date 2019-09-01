@@ -1,5 +1,5 @@
-### MDP Value Iteration and Policy Iteration
-### Reference: https://web.stanford.edu/class/cs234/assignment1/index.html 
+# MDP Value Iteration and Policy Iteration
+# Reference: https://web.stanford.edu/class/cs234/assignment1/index.html
 import numpy as np
 
 np.set_printoptions(precision=3)
@@ -29,6 +29,7 @@ the parameters P, nS, nA, gamma are defined as follows:
 		Discount factor. Number in range [0, 1)
 """
 
+
 def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-3):
     """Evaluate the value function from a given policy.
 
@@ -47,12 +48,28 @@ def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-3):
         The value function of the given policy, where value_function[s] is
         the value of state s
     """
-    
+
     value_function = np.zeros(nS)
     ############################
     # YOUR IMPLEMENTATION HERE #
-    
 
+    #prev_value_function = value_function.copy()
+    # while(delta >= tol):  # terminate situation
+    while True:
+        delta = 0
+        for state in range(nS):  # loop through every state
+            v = 0
+            action_probility = policy[state]
+            for action in range(nA):
+                for probility, nextstate, reward, terminal in P[state][action]:
+                    v += action_probility[action] * probility * \
+                        (reward + gamma * value_function[nextstate])
+                    # update delta
+            delta = max(delta, np.abs(
+                        v - value_function[state]))
+            value_function[state] = v
+        if delta <= tol:
+            break
     return value_function
 
 
@@ -78,11 +95,17 @@ def policy_improvement(P, nS, nA, value_from_policy, gamma=0.9):
 
     new_policy = np.ones([nS, nA]) / nA
 
-	############################
-	# YOUR IMPLEMENTATION HERE #
-        
-
-	############################
+    ############################
+    # YOUR IMPLEMENTATION HERE #
+    Q_function = []
+    for s in range(nS):
+        for a in range(nA):
+            for probility, nextstate, reward, terminal in P[s][a]:
+                Q_function[a] += probility * \
+                    (reward + gamma * value_from_policy[nextstate])
+            optimal_policy = np.argmax(Q_function)
+            new_policy[s] = optimal_policy
+    ############################
     return new_policy
 
 
@@ -105,11 +128,15 @@ def policy_iteration(P, nS, nA, policy, gamma=0.9, tol=1e-3):
     V: np.ndarray[nS]
     """
     new_policy = policy.copy()
-	############################
-	# YOUR IMPLEMENTATION HERE #
+    ############################
+    # YOUR IMPLEMENTATION HERE #
+    V = policy_evaluation(
+        P, nS, nA, policy, gamma=0.9, tol=1e-3)
+    new_policy = policy_improvement(P, nS, nA, V, gamma=0.9)
 
-	############################
+    ############################
     return new_policy, V
+
 
 def value_iteration(P, nS, nA, V, gamma=0.9, tol=1e-3):
     """
@@ -129,16 +156,20 @@ def value_iteration(P, nS, nA, V, gamma=0.9, tol=1e-3):
     policy_new: np.ndarray[nS,nA]
     V_new: np.ndarray[nS]
     """
-    
+
     V_new = V.copy()
 
     ############################
     # YOUR IMPLEMENTATION HERE #
 
+    # Terminate state
+    # max(value_function(s) - prev_value_function(s)) < tol
+
     ############################
     return policy_new, V_new
 
-def render_single(env, policy, render = False, n_episodes=100):
+
+def render_single(env, policy, render=False, n_episodes=100):
     """
     Given a game envrionemnt of gym package, play multiple episodes of the game.
     An episode is over when the returned value for "done" = True.
@@ -151,22 +182,19 @@ def render_single(env, policy, render = False, n_episodes=100):
     policy: np.array of shape [env.nS, env.nA]
       The action to take at a given state
     render: whether or not to render the game(it's slower to render the game)
-    n_episodes: the number of episodes to play in the game. 
+    n_episodes: the number of episodes to play in the game.
     Returns:
     ------
     total_rewards: the total number of rewards achieved in the game.
     """
     total_rewards = 0
     for _ in range(n_episodes):
-        ob = env.reset() # initialize the episode
+        ob = env.reset()  # initialize the episode
         done = False
         while not done:
             if render:
-                env.render() # render the game
+                env.render()  # render the game
             ############################
             # YOUR IMPLEMENTATION HERE #
-            
+
     return total_rewards
-
-
-
