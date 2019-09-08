@@ -30,7 +30,7 @@ the parameters P, nS, nA, gamma are defined as follows:
 """
 
 
-def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-3):
+def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-8):
     """Evaluate the value function from a given policy.
 
     Parameters:
@@ -52,23 +52,23 @@ def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-3):
     value_function = np.zeros(nS)
     ############################
     # YOUR IMPLEMENTATION HERE #
-
+    #tol = 1e-8
     #prev_value_function = value_function.copy()
     # while(delta >= tol):  # terminate situation
     while True:
         delta = 0
         for state in range(nS):  # loop through every state
             v = 0
-            action_probility = policy[state]
-            for action in range(nA):
+            # get probability distribution over actions
+            for action, action_probility in enumerate(policy[state]):
                 for probility, nextstate, reward, terminal in P[state][action]:
-                    v += action_probility[action] * probility * \
+                    # apply bellman expectatoin eqn
+                    v += action_probility * probility * \
                         (reward + gamma * value_function[nextstate])
-                    # update delta
-            delta = max(delta, np.abs(
+            delta = max(delta, np.abs(  # update delta with the maximum change
                         v - value_function[state]))
             value_function[state] = v
-        if delta <= tol:
+        if delta < tol:
             break
     return value_function
 
@@ -97,19 +97,38 @@ def policy_improvement(P, nS, nA, value_from_policy, gamma=0.9):
 
     ############################
     # YOUR IMPLEMENTATION HERE #
-    Q_function = []
-    for s in range(nS):
+    def one_step_lookahead(s, value_fn):
+        A = np.zeros(nA)
         for a in range(nA):
-            for probility, nextstate, reward, terminal in P[s][a]:
-                Q_function[a] += probility * \
-                    (reward + gamma * value_from_policy[nextstate])
-            optimal_policy = np.argmax(Q_function)
-            new_policy[s] = optimal_policy
+            for prob, next_state, reward, done in P[s][a]:
+                A[a] += prob * (reward + gamma * value_fn[next_state])
+        return A
+    policy = np.ones([nS, nA]) / nA
+    action_values = np.zeros(nA)
+    while True:
+        policy_stable = True
+        # loop over state space
+        for s in range(nS):
+            # perform one step lookahead
+            actions_values = one_step_lookahead(s, value_from_policy)
+            # maximize over possible actions
+            best_action = np.argmax(actions_values)
+            # best action on current policy
+            chosen_action = np.argmax(policy[s])
+            # if Bellman optimality equation not satisifed
+            if(best_action != chosen_action):
+                policy_stable = False
+
+            # the new policy after acting greedily w.r.t value function
+            policy[s] = np.eye(nA)[best_action]
+        # if Bellman optimality eqn is satisfied
+        if(policy_stable):
+            return policy
     ############################
-    return new_policy
+    # return new_policy
 
 
-def policy_iteration(P, nS, nA, policy, gamma=0.9, tol=1e-3):
+def policy_iteration(P, nS, nA, policy, gamma=0.9, tol=1e-8):
     """Runs policy iteration.
 
     You should call the policy_evaluation() and policy_improvement() methods to
@@ -130,10 +149,13 @@ def policy_iteration(P, nS, nA, policy, gamma=0.9, tol=1e-3):
     new_policy = policy.copy()
     ############################
     # YOUR IMPLEMENTATION HERE #
-    V = policy_evaluation(
-        P, nS, nA, policy, gamma=0.9, tol=1e-3)
-    new_policy = policy_improvement(P, nS, nA, V, gamma=0.9)
-
+    V = np.zeros(nS)
+    while True:
+        V = policy_evaluation(P, nS, nA, policy)
+        new_policy = policy_improvement(P, nS, nA, V)
+        if np.all(new_policy == policy):
+            break
+        policy = new_policy
     ############################
     return new_policy, V
 
