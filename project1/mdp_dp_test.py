@@ -212,7 +212,6 @@ def test_value_iteration():
     optimal_V2 = np.array([0.59 , 0.656, 0.729, 0.656, 0.656, 0. , 0.81 , 0. , 0.729,
        0.81 , 0.9  , 0. , 0. , 0.9 , 1. , 0. ])
 
-    
     assert np.allclose(policy_vi1,optimal_policy)
     assert np.allclose(V_vi1,optimal_V,atol=1e-3)
     assert np.allclose(policy_vi2,optimal_policy)

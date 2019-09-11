@@ -97,6 +97,9 @@ def policy_improvement(P, nS, nA, value_from_policy, gamma=0.9):
 
     ############################
     # YOUR IMPLEMENTATION HERE #
+    """
+    one_step_lookahead function idea fron https://towardsdatascience.com/reinforcement-learning-demystified-solving-mdps-with-dynamic-programming-b52c8093c919
+    """
     def one_step_lookahead(s, value_fn):
         A = np.zeros(nA)
         for a in range(nA):
@@ -118,7 +121,6 @@ def policy_improvement(P, nS, nA, value_from_policy, gamma=0.9):
             # if Bellman optimality equation not satisifed
             if(best_action != chosen_action):
                 policy_stable = False
-
             # the new policy after acting greedily w.r.t value function
             policy[s] = np.eye(nA)[best_action]
         # if Bellman optimality eqn is satisfied
@@ -160,7 +162,7 @@ def policy_iteration(P, nS, nA, policy, gamma=0.9, tol=1e-8):
     return new_policy, V
 
 
-def value_iteration(P, nS, nA, V, gamma=0.9, tol=1e-3):
+def value_iteration(P, nS, nA, V, gamma=0.9, tol=1e-8):
     """
     Learn value function and policy by using value iteration method for a given
     gamma and environment.
@@ -183,12 +185,42 @@ def value_iteration(P, nS, nA, V, gamma=0.9, tol=1e-3):
 
     ############################
     # YOUR IMPLEMENTATION HERE #
+    """
+    one_step_lookahead function idea fron https://towardsdatascience.com/reinforcement-learning-demystified-solving-mdps-with-dynamic-programming-b52c8093c919
+    """
+    def one_step_lookahead(state, V):
+        A = np.zeros(nA)
+        for a in range(nA):
+            for prob, next_state, reward, done in P[state][a]:
+                A[a] += prob * (reward + gamma * V[next_state])
+        return A
+    V = np.zeros(nS)
+    while True:
+        # Stopping condition
+        delta = 0
+        # Update each state...
+        for s in range(nS):
+            # Do a one-step lookahead to find the best action
+            A = one_step_lookahead(s, V)
+            best_action_value = np.max(A)
+            # Calculate delta across all states seen so far
+            delta = max(delta, np.abs(best_action_value - V[s]))
+            # Update the value function
+            V[s] = best_action_value
+        # Check if we can stop
+        if delta < tol:
+            break
 
-    # Terminate state
-    # max(value_function(s) - prev_value_function(s)) < tol
-
+    # Create a deterministic policy using the optimal value function
+    policy = np.zeros([nS, nA])
+    for s in range(nS):
+        # One step lookahead to find the best action for this state
+        A = one_step_lookahead(s, V)
+        best_action = np.argmax(A)
+        policy[s, best_action] = 1.0
     ############################
-    return policy_new, V_new
+    # return policy_new, V_new
+    return policy, V
 
 
 def render_single(env, policy, render=False, n_episodes=100):
@@ -210,6 +242,7 @@ def render_single(env, policy, render=False, n_episodes=100):
     total_rewards: the total number of rewards achieved in the game.
     """
     total_rewards = 0
+    #sum = 0
     for _ in range(n_episodes):
         ob = env.reset()  # initialize the episode
         done = False
@@ -218,5 +251,15 @@ def render_single(env, policy, render=False, n_episodes=100):
                 env.render()  # render the game
             ############################
             # YOUR IMPLEMENTATION HERE #
+            action = np.argmax(policy[ob])
+            # print(action)
+            # for a, action_p in enumerate(policy[ob]):
+            #     # print(env.step(a))
+            state, reward, done, info = env.step(action)
+            ob = state
+            #sum += reward
+            total_rewards += reward
+            print("Episode reward: %f" % total_rewards)
+    env.close()
 
     return total_rewards
