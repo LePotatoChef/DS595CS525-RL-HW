@@ -1,5 +1,5 @@
-### MDP Value Iteration and Policy Iteration
-### Reference: https://web.stanford.edu/class/cs234/assignment1/index.html 
+# MDP Value Iteration and Policy Iteration
+# Reference: https://web.stanford.edu/class/cs234/assignment1/index.html
 import numpy as np
 
 np.set_printoptions(precision=3)
@@ -29,6 +29,10 @@ the parameters P, nS, nA, gamma are defined as follows:
 		Discount factor. Number in range [0, 1)
 """
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> zekundai
 def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-8):
     """Evaluate the value function from a given policy.
 
@@ -47,12 +51,33 @@ def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-8):
         The value function of the given policy, where value_function[s] is
         the value of state s
     """
-    
+
     value_function = np.zeros(nS)
     ############################
     # YOUR IMPLEMENTATION HERE #
+<<<<<<< HEAD
     
     ############################
+=======
+    #tol = 1e-8
+    #prev_value_function = value_function.copy()
+    # while(delta >= tol):  # terminate situation
+    while True:
+        delta = 0
+        for state in range(nS):  # loop through every state
+            v = 0
+            # get probability distribution over actions
+            for action, action_probility in enumerate(policy[state]):
+                for probility, nextstate, reward, terminal in P[state][action]:
+                    # apply bellman expectatoin eqn
+                    v += action_probility * probility * \
+                        (reward + gamma * value_function[nextstate])
+            delta = max(delta, np.abs(  # update delta with the maximum change
+                        v - value_function[state]))
+            value_function[state] = v
+        if delta < tol:
+            break
+>>>>>>> zekundai
     return value_function
 
 
@@ -74,11 +99,48 @@ def policy_improvement(P, nS, nA, value_from_policy, gamma=0.9):
     """
 
     new_policy = np.ones([nS, nA]) / nA
+<<<<<<< HEAD
 	############################
 	# YOUR IMPLEMENTATION HERE #
 
 	############################
     return new_policy
+=======
+
+    ############################
+    # YOUR IMPLEMENTATION HERE #
+    """
+    one_step_lookahead function idea from https://towardsdatascience.com/reinforcement-learning-demystified-solving-mdps-with-dynamic-programming-b52c8093c919
+    """
+    def one_step_lookahead(s, value_fn):
+        A = np.zeros(nA)
+        for a in range(nA):
+            for prob, next_state, reward, done in P[s][a]:
+                A[a] += prob * (reward + gamma * value_fn[next_state])
+        return A
+    policy = np.ones([nS, nA]) / nA
+    action_values = np.zeros(nA)
+    while True:
+        policy_stable = True
+        # loop over state space
+        for s in range(nS):
+            # perform one step lookahead
+            actions_values = one_step_lookahead(s, value_from_policy)
+            # maximize over possible actions
+            best_action = np.argmax(actions_values)
+            # best action on current policy
+            chosen_action = np.argmax(policy[s])
+            # if Bellman optimality equation not satisifed
+            if(best_action != chosen_action):
+                policy_stable = False
+            # the new policy after acting greedily w.r.t value function
+            policy[s] = np.eye(nA)[best_action]
+        # if Bellman optimality eqn is satisfied
+        if(policy_stable):
+            return policy
+    ############################
+    # return new_policy
+>>>>>>> zekundai
 
 
 def policy_iteration(P, nS, nA, policy, gamma=0.9, tol=1e-8):
@@ -100,12 +162,22 @@ def policy_iteration(P, nS, nA, policy, gamma=0.9, tol=1e-8):
     V: np.ndarray[nS]
     """
     new_policy = policy.copy()
-	############################
-	# YOUR IMPLEMENTATION HERE #
-
-	############################
+    ############################
+    # YOUR IMPLEMENTATION HERE #
+    V = np.zeros(nS)
+    while True:
+        V = policy_evaluation(P, nS, nA, policy)
+        new_policy = policy_improvement(P, nS, nA, V)
+        if np.all(new_policy == policy):
+            break
+        policy = new_policy
+    ############################
     return new_policy, V
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> zekundai
 def value_iteration(P, nS, nA, V, gamma=0.9, tol=1e-8):
     """
     Learn value function and policy by using value iteration method for a given
@@ -124,15 +196,47 @@ def value_iteration(P, nS, nA, V, gamma=0.9, tol=1e-8):
     policy_new: np.ndarray[nS,nA]
     V_new: np.ndarray[nS]
     """
-    
+
     V_new = V.copy()
     ############################
     # YOUR IMPLEMENTATION HERE #
+    """
+    one_step_lookahead function idea from https://towardsdatascience.com/reinforcement-learning-demystified-solving-mdps-with-dynamic-programming-b52c8093c919
+    """
+    def one_step_lookahead(state, V):
+        A = np.zeros(nA)
+        for a in range(nA):
+            for prob, next_state, reward, done in P[state][a]:
+                A[a] += prob * (reward + gamma * V[next_state])
+        return A
+    V = np.zeros(nS)
+    while True:
+        delta = 0
+        for s in range(nS):
+            # Do a one-step lookahead to find the best action
+            A = one_step_lookahead(s, V)
+            best_action_value = np.max(A)
+            # Calculate delta across all states seen so far
+            delta = max(delta, np.abs(best_action_value - V[s]))
+            # Update the value function
+            V[s] = best_action_value
+        # Check if we can stop
+        if delta < tol:
+            break
 
+    # Create a deterministic policy using the optimal value function
+    policy = np.zeros([nS, nA])
+    for s in range(nS):
+        # One step lookahead to find the best action for this state
+        A = one_step_lookahead(s, V)
+        best_action = np.argmax(A)
+        policy[s, best_action] = 1.0
     ############################
-    return policy_new, V_new
+    # return policy_new, V_new
+    return policy, V
 
-def render_single(env, policy, render = False, n_episodes=100):
+
+def render_single(env, policy, render=False, n_episodes=100):
     """
     Given a game envrionemnt of gym package, play multiple episodes of the game.
     An episode is over when the returned value for "done" = True.
@@ -145,22 +249,30 @@ def render_single(env, policy, render = False, n_episodes=100):
     policy: np.array of shape [env.nS, env.nA]
       The action to take at a given state
     render: whether or not to render the game(it's slower to render the game)
-    n_episodes: the number of episodes to play in the game. 
+    n_episodes: the number of episodes to play in the game.
     Returns:
     ------
     total_rewards: the total number of rewards achieved in the game.
     """
     total_rewards = 0
+    #sum = 0
     for _ in range(n_episodes):
-        ob = env.reset() # initialize the episode
+        ob = env.reset()  # initialize the episode
         done = False
         while not done:
             if render:
-                env.render() # render the game
+                env.render()  # render the game
             ############################
             # YOUR IMPLEMENTATION HERE #
-            
+            action = np.argmax(policy[ob])
+            # print(action)
+            # for a, action_p in enumerate(policy[ob]):
+            #     # print(env.step(a))
+            state, reward, done, info = env.step(action)
+            ob = state
+            #sum += reward
+            total_rewards += reward
+            print("Episode reward: %f" % total_rewards)
+    env.close()
+
     return total_rewards
-
-
-

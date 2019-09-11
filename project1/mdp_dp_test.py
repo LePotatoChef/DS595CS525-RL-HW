@@ -9,7 +9,7 @@ from gym.envs.registration import register
 
 """
     This file includes unit test for mdp_dp.py
-    You could test the correctness of your code by 
+    You could test the correctness of your code by
     typing 'nosetests -v mdp_dp_test.py' in the terminal
 """
 # Evaluate non-deterministic
@@ -26,14 +26,23 @@ register(
 env2 = gym.make("Deterministic-4x4-FrozenLake-v0")
 
 #---------------------------------------------------------------
+
+
 def test_python_version():
     '''------Dynamic Programming for MDP (100 points in total)------'''
+<<<<<<< HEAD
     assert sys.version_info[0] == 3 # require python 3
+=======
+    assert sys.version_info[0] == 3  # require python 2
+>>>>>>> zekundai
 
 #---------------------------------------------------------------
+
+
 def test_policy_evaluation():
     '''policy_evaluation (20 points)'''
     random_policy1 = np.ones([env.nS, env.nA]) / env.nA
+<<<<<<< HEAD
     V1 = policy_evaluation(env.P,env.nS,env.nA, random_policy1,tol=1e-8)
     test_v1 = np.array([0.004, 0.004, 0.01 , 0.004, 0.007, 0. , 0.026, 0. , 0.019,
        0.058, 0.107, 0. , 0. , 0.13 , 0.391, 0. ])
@@ -45,6 +54,25 @@ def test_policy_evaluation():
     test_v2 = np.array([0.007, 0.007, 0.017, 0.007, 0.01 , 0. , 0.043, 0. , 0.029,
        0.093, 0.174, 0. , 0. , 0.215, 0.504, 0. ])
 
+=======
+    V1 = policy_evaluation(env.P, env.nS, env.nA, random_policy1)
+    print("V1")
+    print(V1)
+    print("test_v1")
+    test_v1 = np.array([0.004, 0.004, 0.01, 0.004, 0.007, 0., 0.026, 0., 0.019,
+       0.058, 0.107, 0., 0., 0.13, 0.391, 0.])
+    print(test_v1)
+    np.random.seed(595)
+    random_policy2 = np.random.rand(env.nS, env.nA)
+    random_policy2 = random_policy2/random_policy2.sum(axis=1)[:, None]
+    V2 = policy_evaluation(env.P, env.nS, env.nA, random_policy2)
+    test_v2 = np.array([0.007, 0.007, 0.017, 0.007, 0.01, 0., 0.043, 0., 0.029,
+       0.093, 0.174, 0., 0., 0.215, 0.504, 0.])
+    print("V2")
+    print(V2)
+    print("test_v2")
+    print(test_v2)
+>>>>>>> zekundai
     assert np.allclose(test_v1,V1,atol=1e-3)
     assert np.allclose(test_v2,V2,atol=1e-3)
     
@@ -207,7 +235,6 @@ def test_value_iteration():
     optimal_V2 = np.array([0.59 , 0.656, 0.729, 0.656, 0.656, 0. , 0.81 , 0. , 0.729,
        0.81 , 0.9  , 0. , 0. , 0.9 , 1. , 0. ])
 
-    
     assert np.allclose(policy_vi1,optimal_policy)
     assert np.allclose(V_vi1,optimal_V,atol=1e-3)
     assert np.allclose(policy_vi2,optimal_policy)
