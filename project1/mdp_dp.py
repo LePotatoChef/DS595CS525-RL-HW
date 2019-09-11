@@ -29,10 +29,7 @@ the parameters P, nS, nA, gamma are defined as follows:
 		Discount factor. Number in range [0, 1)
 """
 
-<<<<<<< HEAD
-=======
 
->>>>>>> zekundai
 def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-8):
     """Evaluate the value function from a given policy.
 
@@ -55,10 +52,6 @@ def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-8):
     value_function = np.zeros(nS)
     ############################
     # YOUR IMPLEMENTATION HERE #
-<<<<<<< HEAD
-    
-    ############################
-=======
     #tol = 1e-8
     #prev_value_function = value_function.copy()
     # while(delta >= tol):  # terminate situation
@@ -77,7 +70,6 @@ def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-8):
             value_function[state] = v
         if delta < tol:
             break
->>>>>>> zekundai
     return value_function
 
 
@@ -99,13 +91,6 @@ def policy_improvement(P, nS, nA, value_from_policy, gamma=0.9):
     """
 
     new_policy = np.ones([nS, nA]) / nA
-<<<<<<< HEAD
-	############################
-	# YOUR IMPLEMENTATION HERE #
-
-	############################
-    return new_policy
-=======
 
     ############################
     # YOUR IMPLEMENTATION HERE #
@@ -140,7 +125,6 @@ def policy_improvement(P, nS, nA, value_from_policy, gamma=0.9):
             return policy
     ############################
     # return new_policy
->>>>>>> zekundai
 
 
 def policy_iteration(P, nS, nA, policy, gamma=0.9, tol=1e-8):
@@ -174,10 +158,7 @@ def policy_iteration(P, nS, nA, policy, gamma=0.9, tol=1e-8):
     ############################
     return new_policy, V
 
-<<<<<<< HEAD
-=======
 
->>>>>>> zekundai
 def value_iteration(P, nS, nA, V, gamma=0.9, tol=1e-8):
     """
     Learn value function and policy by using value iteration method for a given
