@@ -205,7 +205,6 @@ def value_iteration(P, nS, nA, V, gamma=0.9, tol=1e-8):
         if delta < tol:
             break
 
-    # Create a deterministic policy using the optimal value function
     policy = np.zeros([nS, nA])
     for s in range(nS):
         # One step lookahead to find the best action for this state
