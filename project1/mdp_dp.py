@@ -98,7 +98,7 @@ def policy_improvement(P, nS, nA, value_from_policy, gamma=0.9):
     ############################
     # YOUR IMPLEMENTATION HERE #
     """
-    one_step_lookahead function idea fron https://towardsdatascience.com/reinforcement-learning-demystified-solving-mdps-with-dynamic-programming-b52c8093c919
+    one_step_lookahead function idea from https://towardsdatascience.com/reinforcement-learning-demystified-solving-mdps-with-dynamic-programming-b52c8093c919
     """
     def one_step_lookahead(s, value_fn):
         A = np.zeros(nA)
@@ -186,7 +186,7 @@ def value_iteration(P, nS, nA, V, gamma=0.9, tol=1e-8):
     ############################
     # YOUR IMPLEMENTATION HERE #
     """
-    one_step_lookahead function idea fron https://towardsdatascience.com/reinforcement-learning-demystified-solving-mdps-with-dynamic-programming-b52c8093c919
+    one_step_lookahead function idea from https://towardsdatascience.com/reinforcement-learning-demystified-solving-mdps-with-dynamic-programming-b52c8093c919
     """
     def one_step_lookahead(state, V):
         A = np.zeros(nA)
@@ -196,9 +196,7 @@ def value_iteration(P, nS, nA, V, gamma=0.9, tol=1e-8):
         return A
     V = np.zeros(nS)
     while True:
-        # Stopping condition
         delta = 0
-        # Update each state...
         for s in range(nS):
             # Do a one-step lookahead to find the best action
             A = one_step_lookahead(s, V)
