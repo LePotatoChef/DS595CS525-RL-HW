@@ -90,7 +90,7 @@ def sarsa(env, n_episodes, gamma=1.0, alpha=0.5, epsilon=0.1):
         while True:
             new_state, reward, done, info = env.step(action)
             if done:
-                Q[state][action] = Q[state][action]+alpha * \
+                Q[state][action] = Q[state][action] + alpha * \
                     (reward+gamma*0.0-Q[state][action])
                 break
             else:
