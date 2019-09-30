@@ -8,11 +8,11 @@ from collections import defaultdict
     Temporal Difference
     In this problem, you will implememnt an AI player for cliffwalking.
     The main goal of this problem is to get familar with temporal diference algorithm.
-    You could test the correctness of your code 
+    You could test the correctness of your code
     by typing 'nosetests -v td_test.py' in the terminal.
-    
+
     You don't have to follow the comments to write your code. They are provided
-    as hints in case you need. 
+    as hints in case you need.
 '''
 #-------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@ def epsilon_greedy(Q, state, nA, epsilon=0.1):
     -----------
     Q: dict()
         A dictionary  that maps from state -> action-values,
-        where Q[s][a] is the estimated action value corresponding to state s and action a. 
+        where Q[s][a] is the estimated action value corresponding to state s and action a.
     state: int
         current state
     nA: int
@@ -46,6 +46,7 @@ def epsilon_greedy(Q, state, nA, epsilon=0.1):
     action[best_action] += (1 - epsilon)
     probs = action
     action = np.random.choice(np.arange(nA), p=probs)
+    # print(action)
     ############################
     return action
 
@@ -69,7 +70,7 @@ def sarsa(env, n_episodes, gamma=1.0, alpha=0.5, epsilon=0.1):
     --------
     Q: dict()
         A dictionary  that maps from state -> action-values,
-        where Q[s][a] is the estimated action value corresponding to state s and action a. 
+        where Q[s][a] is the estimated action value corresponding to state s and action a.
     Hints:
     -----
     You could consider decaying epsilon, i.e. epsilon = 0.99*epsilon during each episode.
@@ -78,38 +79,26 @@ def sarsa(env, n_episodes, gamma=1.0, alpha=0.5, epsilon=0.1):
     # a nested dictionary that maps state -> (action -> action-value)
     # e.g. Q[state] = np.darrary(nA)
     Q = defaultdict(lambda: np.zeros(env.action_space.n))
-
     ############################
     # YOUR IMPLEMENTATION HERE #
-    rewards = []
-    for i_episode in range(1, 1+n_episodes):
+    done = False
+    for i in range(1, 1+n_episodes):
+        epsilon = 0.99*epsilon
         state = env.reset()
         action = epsilon_greedy(Q, state, env.action_space.n)
-        sum_reward = 0.0
-
         while True:
             new_state, reward, done, info = env.step(action)
+            new_action = epsilon_greedy(
+                Q, new_state, env.action_space.n, epsilon)
+            Q[state][action] = Q[state][action]+alpha * \
+                (reward+gamma*Q[new_state]
+                    [new_action]-Q[state][action])
+            state = new_state
+            action = new_action
             if done:
-                Q[state][action] = Q[state][action] + alpha * \
-                    (reward+gamma*0.0-Q[state][action])
                 break
-            else:
-                new_action = epsilon_greedy(Q, new_state, env.nA)
-                Q[state][action] = Q[state][action]+alpha * \
-                    (reward+gamma*Q[new_state]
-                     [new_action]-Q[state][action])
-                state = new_state
-                action = new_action
-            sum_reward += reward
-        rewards.append(sum_reward)
     ############################
-    print(Q)
     return Q
-
-
-def greedy_policy(Q, state):
-    best_action = np.argmax(Q[state])
-    return best_action
 
 
 def q_learning(env, n_episodes, gamma=1.0, alpha=0.5, epsilon=0.1):
@@ -139,27 +128,19 @@ def q_learning(env, n_episodes, gamma=1.0, alpha=0.5, epsilon=0.1):
 
     ############################
     # YOUR IMPLEMENTATION HERE #
-    rewards = []
-
-    for i_episode in range(1, 1 + n_episodes):
+    for i in range(1, 1 + n_episodes):
         state = env.reset()
-        sum_reward = 0.0
-
+        done = False
         while True:
             action = epsilon_greedy(Q, state, env.action_space.n)
             new_state, reward, done, info = env.step(action)
+            #new_action = epsilon_greedy(Q, new_state, env.action_space.n)
+            new_action = np.argmax(Q[state])
+            Q[state][action] = Q[state][action]+alpha * \
+                (reward+gamma*Q[new_state][new_action]-Q[state][action])
+            state = new_state
             if done:
-                Q[state][action] = Q[state][action]+alpha * \
-                    (reward+gamma*0.0-Q[state][action])
                 break
-            else:
-                new_action = greedy_policy(Q, new_state)
-                Q[state][action] = Q[state][action]+alpha * \
-                    (reward+gamma*Q[new_state]
-                     [new_action]-Q[state][action])
-                state = new_state
-            sum_reward += reward
-        rewards.append(sum_reward)
     # loop n_episodes
 
     # initialize the environment

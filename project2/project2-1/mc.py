@@ -178,6 +178,7 @@ def mc_control_epsilon_greedy(env, n_episodes, gamma=1.0, epsilon=0.1):
 
     ############################
     # YOUR IMPLEMENTATION HERE #
+    epsilon = epsilon - (0.1/n_episodes)
     for i_episode in range(1, 1+n_episodes):
         state = env.reset()
         episode = []
