@@ -33,20 +33,15 @@ class Agent_DQN(Agent):
             ...
         """
 
-        super(Agent_DQN,self).__init__(env)
+        super(Agent_DQN, self).__init__(env)
         ###########################
         # YOUR IMPLEMENTATION HERE #
-        
-        
-        
-        
-        
+
         if args.test_dqn:
-            #you can load your model here
+            # you can load your model here
             print('loading trained model')
             ###########################
             # YOUR IMPLEMENTATION HERE #
-            
 
     def init_game_setting(self):
         """
@@ -56,11 +51,10 @@ class Agent_DQN(Agent):
         """
         ###########################
         # YOUR IMPLEMENTATION HERE #
-        
+
         ###########################
         pass
-    
-    
+
     def make_action(self, observation, test=True):
         """
         Return predicted action of your agent
@@ -73,36 +67,32 @@ class Agent_DQN(Agent):
         """
         ###########################
         # YOUR IMPLEMENTATION HERE #
-        
+
         ###########################
         return action
-    
+
     def push(self):
         """ You can add additional arguments as you need. 
         Push new data to buffer and remove the old one if the buffer is full.
-        
+
         Hints:
         -----
             you can consider deque(maxlen = 10000) list
         """
         ###########################
         # YOUR IMPLEMENTATION HERE #
-        
+
         ###########################
-        
-        
+
     def replay_buffer(self):
         """ You can add additional arguments as you need.
         Select batch from buffer.
         """
         ###########################
         # YOUR IMPLEMENTATION HERE #
-        
-        
-        
+
         ###########################
-        return 
-        
+        return
 
     def train(self):
         """
@@ -110,6 +100,5 @@ class Agent_DQN(Agent):
         """
         ###########################
         # YOUR IMPLEMENTATION HERE #
-        
-        
+
         ###########################
