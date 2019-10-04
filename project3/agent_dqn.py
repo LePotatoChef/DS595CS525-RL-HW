@@ -36,6 +36,12 @@ class Agent_DQN(Agent):
         super(Agent_DQN, self).__init__(env)
         ###########################
         # YOUR IMPLEMENTATION HERE #
+        self.eval_net, self.target_net = DQN(), DQN()  # Q net and Target Q net
+        self.learn_step_counter = 0
+        self.memory_counter = 0
+        self.memory = np.zeros((MEMORY_CAPACITY, N_STATES * 2 + 2))
+        self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=LR)
+        self.loss_func = nn.MSELoss()
 
         if args.test_dqn:
             # you can load your model here
@@ -67,11 +73,16 @@ class Agent_DQN(Agent):
         """
         ###########################
         # YOUR IMPLEMENTATION HERE #
-
+        x = torch.unsqueeze(torch.FloatTensor(observation), 0)
+        if np.random.uniform() < EPSILON:
+            actions_value = self.eval_net.forward(x)
+            action = torch.max(actions_value, 1)[1].data.numpy()[0, 0]
+        else:
+            action = np.random.randint(0, N_ACTIONS)
         ###########################
         return action
 
-    def push(self):
+    def push(self, s, a, r, s_):
         """ You can add additional arguments as you need. 
         Push new data to buffer and remove the old one if the buffer is full.
 
@@ -81,7 +92,10 @@ class Agent_DQN(Agent):
         """
         ###########################
         # YOUR IMPLEMENTATION HERE #
-
+        transition = np.hstack((s, [a, r], s_))
+        index = self.memory_counter % MEMORY_CAPACITY
+        self.memory[index, :] = transition
+        self.memory_counter += 1
         ###########################
 
     def replay_buffer(self):
@@ -100,5 +114,28 @@ class Agent_DQN(Agent):
         """
         ###########################
         # YOUR IMPLEMENTATION HERE #
+        if self.learn_step_counter % TARGET_REPLACE_ITER == 0:
+            self.target_net.load_state_dict(self.eval_net.state_dict())
+        self.learn_step_counter += 1
+
+        # sample batch transitions
+        sample_index = np.random.choice(MEMORY_CAPACITY, BATCH_SIZE)
+        b_memory = self.memory[sample_index, :]
+        b_s = torch.FloatTensor(b_memory[:, :N_STATES])
+        b_a = torch.LongTensor(b_memory[:, N_STATES:N_STATES+1].astype(int))
+        b_r = torch.FloatTensor(b_memory[:, N_STATES+1:N_STATES+2])
+        b_s_ = torch.FloatTensor(b_memory[:, -N_STATES:])
+
+        # q_eval w.r.t the action in experience
+        q_eval = self.eval_net(b_s).gather(1, b_a)  # shape (batch, 1)
+        # detach from graph, don't backpropagate
+        q_next = self.target_net(b_s_).detach()
+        q_target = b_r + GAMMA * \
+            q_next.max(1)[0].view(BATCH_SIZE, 1)   # shape (batch, 1)
+        loss = self.loss_func(q_eval, q_target)
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
 
         ###########################
