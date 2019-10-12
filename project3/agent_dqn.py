@@ -1,4 +1,4 @@
-#from agent_dir.agent import Agent
+from dqn_model import DQN
 from agent import Agent
 import os
 from collections import namedtuple
@@ -63,11 +63,11 @@ class Agent_DQN(Agent):
         self.target_net.eval()
         self.policy_net.to(device)
         self.target_net.to(device)
-        self.policy_net.cuda()
-        self.target_net.cuda()
-        if use_cuda:
-            self.policy_net.cuda()
-            self.target_net.cuda()
+        # self.policy_net.cuda()
+        # self.target_net.cuda()
+        # if use_cuda:
+        #     self.policy_net.cuda()
+        #     self.target_net.cuda()
         self.optimizer = optim.RMSprop(self.policy_net.parameters(), lr=1e-5)
         self.memory = ReplayMemory(10000)
 
@@ -100,7 +100,7 @@ class Agent_DQN(Agent):
 
             for t in count():
                 # Select and perform an action
-                action = self.make_action(state)
+                action = self.make_action(state, test=False)
                 next_state, reward, done, _ = self.env.step(action.item())
                 next_state = next_state.transpose((2, 0, 1))
                 next_state = next_state[np.newaxis, :]
@@ -145,18 +145,32 @@ class Agent_DQN(Agent):
         ##################
         # YOUR CODE HERE #
         ##################
-
-        global steps_done
-        self.policy_net.eval()
-        sample = random.random()
-        eps_threshold = EPS_END + (EPS_START - EPS_END) * \
-            math.exp(-1. * steps_done / EPS_DECAY)
-        steps_done += 1
-        if sample > eps_threshold:
-            return self.policy_net(
-                Variable(torch.from_numpy(observation), volatile=True).type(FloatTensor)).data.max(1)[1].view(1, 1)
+        if test:
+            observation = observation.transpose((2, 0, 1))
+            observation = observation[np.newaxis, :]
+            global steps_done
+            self.policy_net.eval()
+            sample = random.random()
+            eps_threshold = EPS_END + (EPS_START - EPS_END) * \
+                math.exp(-1. * steps_done / EPS_DECAY)
+            steps_done += 1
+            if sample > eps_threshold:
+                return self.policy_net(
+                    Variable(torch.from_numpy(observation), volatile=True).type(FloatTensor)).data.max(1)[1].view(1, 1).item()
+            else:
+                return LongTensor([[random.randrange(self.env.action_space.n)]]).item()
         else:
-            return LongTensor([[random.randrange(self.env.action_space.n)]])
+            global steps_done
+            self.policy_net.eval()
+            sample = random.random()
+            eps_threshold = EPS_END + (EPS_START - EPS_END) * \
+                math.exp(-1. * steps_done / EPS_DECAY)
+            steps_done += 1
+            if sample > eps_threshold:
+                return self.policy_net(
+                    Variable(torch.from_numpy(observation), volatile=True).type(FloatTensor)).data.max(1)[1].view(1, 1)
+            else:
+                return LongTensor([[random.randrange(self.env.action_space.n)]])
 
     def optimize_model(self):
         if len(self.memory) < BATCH_SIZE:
@@ -227,21 +241,21 @@ class ReplayMemory(object):
         return len(self.memory)
 
 
-class DQN(nn.Module):
-    def __init__(self, n_actions):
-        super(DQN, self).__init__()
-        self.conv1 = nn.Conv2d(4, 16, kernel_size=5, stride=2)
-        self.bn1 = nn.BatchNorm2d(16)
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
-        self.bn2 = nn.BatchNorm2d(32)
-        self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
-        self.bn3 = nn.BatchNorm2d(32)
-        self.h1 = nn.Linear(1568, 500)
-        self.h2 = nn.Linear(500, n_actions)
+# class DQN(nn.Module):
+#     def __init__(self, n_actions):
+#         super(DQN, self).__init__()
+#         self.conv1 = nn.Conv2d(4, 16, kernel_size=5, stride=2)
+#         self.bn1 = nn.BatchNorm2d(16)
+#         self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
+#         self.bn2 = nn.BatchNorm2d(32)
+#         self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
+#         self.bn3 = nn.BatchNorm2d(32)
+#         self.h1 = nn.Linear(1568, 500)
+#         self.h2 = nn.Linear(500, n_actions)
 
-    def forward(self, x):
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = F.relu(self.bn3(self.conv3(x)))
-        x = F.relu(self.h1(x.view(x.size(0), -1)))
-        return self.h2(x)
+#     def forward(self, x):
+#         x = F.relu(self.bn1(self.conv1(x)))
+#         x = F.relu(self.bn2(self.conv2(x)))
+#         x = F.relu(self.bn3(self.conv3(x)))
+#         x = F.relu(self.h1(x.view(x.size(0), -1)))
+#         return self.h2(x)
