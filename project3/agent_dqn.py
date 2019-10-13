@@ -22,9 +22,9 @@ Tensor = FloatTensor
 BATCH_SIZE = 128
 GAMMA = 0.999
 EPS_START = 0.9
-EPS_END = 0.05
+EPS_END = 0.025
 EPS_DECAY = 30000
-TARGET_UPDATE = 10
+TARGET_UPDATE = 5000
 Transition = namedtuple(
     'Transition', ('state', 'action', 'next_state', 'reward'))
 steps_done = 0
@@ -63,13 +63,15 @@ class Agent_DQN(Agent):
         self.target_net.eval()
         self.policy_net.to(device)
         self.target_net.to(device)
-        # self.policy_net.cuda()
-        # self.target_net.cuda()
-        # if use_cuda:
-        #     self.policy_net.cuda()
-        #     self.target_net.cuda()
-        self.optimizer = optim.RMSprop(self.policy_net.parameters(), lr=1e-5)
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=1.5e-4)
         self.memory = ReplayMemory(10000)
+
+        if args.test_dqn:
+            # you can load your model here
+            print('loading trained model')
+            self.policy_net.load_state_dict(torch.load(
+                os.path.join('save_dir/' 'model-best.pth'), map_location=torch.device('cpu')))
+            self.policy_net.eval()
 
     def init_game_setting(self):
         """
@@ -90,6 +92,8 @@ class Agent_DQN(Agent):
         ##################
         # YOUR CODE HERE #
         ##################
+        logfile = open('simple_dqn.log', 'w+')
+        step = 0
         num_episodes = 1400000
         for i_episode in range(num_episodes):
             # Initialize the environment and state
@@ -97,14 +101,17 @@ class Agent_DQN(Agent):
             observation = observation.transpose((2, 0, 1))
             observation = observation[np.newaxis, :]
             state = observation
-
+            sum_reward = 0
             for t in count():
                 # Select and perform an action
                 action = self.make_action(state, test=False)
                 next_state, reward, done, _ = self.env.step(action.item())
+                reward = np.clip(reward, -1., 1.)
                 next_state = next_state.transpose((2, 0, 1))
                 next_state = next_state[np.newaxis, :]
+                sum_reward += reward
                 reward = Tensor([reward])
+                step += 1
 
                 # Store the transition in memory
                 self.memory.push(torch.from_numpy(state), action,
@@ -116,15 +123,25 @@ class Agent_DQN(Agent):
                 else:
                     state = None
 
-                # Perform one step of the optimization (on the target network)
-                self.optimize_model()
+                if step >= 5000 and step % 5000 == 0:
+                    self.optimize_model()
+                    self.target_net.load_state_dict(
+                        self.policy_net.state_dict())
+                    # Perform one step of the optimization (on the target network)
+
                 if done:
-                    print('resetting env. episode %d \'s reward total was %d.' % (
-                        i_episode+1, t+1))
+                    print('resetting env. episode %d \'s step=%d reward total was %d.' % (
+                        i_episode+1, step, sum_reward))
+                    print('resetting env. episode %d \'s step=%d reward total was %d.' % (
+                        i_episode+1, step, sum_reward), file=logfile)
+                    logfile.flush()
                     break
+
             # Update the target network
-            if i_episode % TARGET_UPDATE == 0:
-                self.target_net.load_state_dict(self.policy_net.state_dict())
+            # if i_episode % TARGET_UPDATE == 0:
+            #     print("Update the target net.")
+            #     # print(self.policy_net.state_dict())
+            #     self.target_net.load_state_dict(self.policy_net.state_dict())
             if i_episode % 50 == 0:
                 checkpoint_path = os.path.join('save_dir', 'model-best.pth')
                 torch.save(self.policy_net.state_dict(), checkpoint_path)
@@ -145,22 +162,14 @@ class Agent_DQN(Agent):
         ##################
         # YOUR CODE HERE #
         ##################
+        global steps_done
         if test:
             observation = observation.transpose((2, 0, 1))
             observation = observation[np.newaxis, :]
-            global steps_done
-            self.policy_net.eval()
-            sample = random.random()
-            eps_threshold = EPS_END + (EPS_START - EPS_END) * \
-                math.exp(-1. * steps_done / EPS_DECAY)
-            steps_done += 1
-            if sample > eps_threshold:
-                return self.policy_net(
-                    Variable(torch.from_numpy(observation), volatile=True).type(FloatTensor)).data.max(1)[1].view(1, 1).item()
-            else:
-                return LongTensor([[random.randrange(self.env.action_space.n)]]).item()
+            # self.policy_net.eval()
+            return self.policy_net(
+                Variable(torch.from_numpy(observation), volatile=True).type(FloatTensor)).data.max(1)[1].view(1, 1).item()
         else:
-            global steps_done
             self.policy_net.eval()
             sample = random.random()
             eps_threshold = EPS_END + (EPS_START - EPS_END) * \
