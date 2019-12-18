@@ -205,16 +205,14 @@ def value_iteration(P, nS, nA, V, gamma=0.9, tol=1e-8):
         if delta < tol:
             break
 
-    # Create a deterministic policy using the optimal value function
-    policy = np.zeros([nS, nA])
+    policy_new = np.zeros([nS, nA])
     for s in range(nS):
         # One step lookahead to find the best action for this state
         A = one_step_lookahead(s, V)
         best_action = np.argmax(A)
-        policy[s, best_action] = 1.0
+        policy_new[s, best_action] = 1.0
     ############################
-    # return policy_new, V_new
-    return policy, V
+    return policy_new, V
 
 
 def render_single(env, policy, render=False, n_episodes=100):
